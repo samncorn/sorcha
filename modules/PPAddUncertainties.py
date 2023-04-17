@@ -43,12 +43,12 @@ class Error(Exception):
 
 ############################################
 
-def addUncertainties(ephemsdf,obsdf,raName='fieldRA',decName='fieldDec',obsIdName='FieldID',
+def addUncertainties(ephemsdf,obsdf,raName='fieldRA',decName='fieldDec',obsIdName='observationId',
                      obsEpochName='observationStartMJD',
                      raNameEph='AstRA(deg)',decNameEph='AstDec(deg)',
-                     obsIdNameEph='observationId',ephEpochName='FieldMJD',
+                     obsIdNameEph='FieldID',ephEpochName='FieldMJD',
                      limMagName='fiveSigmaDepth',seeingName='seeingFwhmGeom',
-                     filterMagName='MaginFil'):
+                     filterMagName='Mag'):
 
 
 #ef addUncertainties(ephemsdf,obsdf,raName='fieldRA',decName='fieldDec',obsIdName='observationId',
