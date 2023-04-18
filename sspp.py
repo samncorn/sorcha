@@ -45,9 +45,7 @@ def run(parser):
     rng = np.random.default_rng(2021) # should randomize this
 
     # pplogger.info('Reading pointing database')
-    con=sql.connect(path2opsim)
-    opsim=pd.read_sql_query('SELECT observationId, observationStartMJD, filter, seeingFwhmGeom, seeingFwhmEff, fiveSigmaDepth, fieldRA, fieldDec, rotSkyPos FROM observations order by observationId', con)
-    # print(opsim.columns)
+     # print(opsim.columns)
     # oif = loadPandas(path2input)
     if args.h5table==None: # assumes pandas formatted hdf5 file
         oif = pd.read_hdf(args.input).reset_index(drop=True)
@@ -56,7 +54,14 @@ def run(parser):
         # note that while we can load table from such an h5 file, they must be written to seperate output. 
         # adds a bit of time, but not complicated to have another post-post-processing script
 
+    opsimstart = oif['FieldID'].min()
+    opsimend= oif['FieldID'].max()
 
+    querycolumns= ['observationId', 'observationStartMJD', 'filter', 'seeingFwhmGeom', 'seeingFwhmEff', 'fiveSigmaDepth', 'fieldRA', 'fieldDec', 'rotSkyPos']
+    query = 'SELECT ' + ', '.join(querycolumns) + f' FROM observations ORDER BY observationId LIMIT %i, %i' %(opsimstart, opsimend-opsimstart+1)
+    con=sql.connect(path2opsim)
+    opsim=pd.read_sql_query(query, con)
+   
     colors=pd.read_csv(path2colors, delim_whitespace=True).reset_index(drop=True)
 
     # surveydb_join= pd.merge(oif["FieldID"], opsim, left_on="FieldID", right_on="observationId", how="left")
