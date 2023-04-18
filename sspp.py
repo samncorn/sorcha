@@ -49,7 +49,14 @@ def run(parser):
     opsim=pd.read_sql_query('SELECT observationId, observationStartMJD, filter, seeingFwhmGeom, seeingFwhmEff, fiveSigmaDepth, fieldRA, fieldDec, rotSkyPos FROM observations order by observationId', con)
     # print(opsim.columns)
     # oif = loadPandas(path2input)
-    oif = pd.read_hdf(args.input).reset_index(drop=True)
+    if args.h5table==None: # assumes pandas formatted hdf5 file
+        oif = pd.read_hdf(args.input).reset_index(drop=True)
+    else:
+        oif = pd.read_hdf(args.input, key=args.h5table).reset_index(drop=True)
+        # note that while we can load table from such an h5 file, they must be written to seperate output. 
+        # adds a bit of time, but not complicated to have another post-post-processing script
+
+
     colors=pd.read_csv(path2colors, delim_whitespace=True).reset_index(drop=True)
 
     # surveydb_join= pd.merge(oif["FieldID"], opsim, left_on="FieldID", right_on="observationId", how="left")
@@ -61,7 +68,7 @@ def run(parser):
     oif["Mag"]=PPTranslateMagnitude.PPTranslateMagnitude(oif, opsim, colors)
 
     # print(oif.columns)
-    oif['AstrometricSigma(mas)'], oif['PhotometricSigma(mag)'], oif["SNR"] = PPAddUncertainties.addUncertainties(oif, opsim)
+    oif['AstrometricSigma(mas)'], oif['PhotometricSigma(mag)'], oif["SNR"] = PPAddUncertainties.addUncertainties(oif, opsim, obsIdNameEph='FieldID', obsIdName='observationId', filterMagName='Mag')
     # print(len(uncert[0]))
     # print(len(oif))
     oif["AstrometricSigma(deg)"] = oif['AstrometricSigma(mas)'] / 3600 / 1000
@@ -75,13 +82,18 @@ def run(parser):
     oif["detectorID"] = detectorIDs
     oif.reset_index(drop=True, inplace=True)
 
+    oif.drop(columns=["AstrometricSigma(mas)"], inplace=True)
+
     if args.save_footprint:
+        if args.h5table==None:
+            fp_out_path=os.path.join(args.outpath, outstem+'_footprint'+'.h5')
+        else:
+            fp_out_path=os.path.join(args.outpath, outstem+'_'+args.h5table+'_footprint'+'.h5')
         oif.drop(columns=opsim.columns).to_hdf(
-            os.path.join(args.outpath, outstem, '.h5'),
+            fp_out_path,
             key='data', 
             complevel=3)
         
-    oif.drop(columns=["AstrometricSigma(mas)"], inplace=True)
     oif.drop( np.where(oif["SNR"] <= 2.)[0], inplace=True)
     oif.reset_index(drop=True, inplace=True)
 
@@ -92,8 +104,19 @@ def run(parser):
     oif.drop( np.where(oif["Mag"] + oif["dmagDetect"] + oif['dmagVignet'] >= oif["fiveSigmaDepth"])[0], inplace=True)
     oif.reset_index(drop=True, inplace=True)
 
+    if args.h5table==None:
+        out_path_final=outpath + '.h5'
+    else:
+        out_path_final=outpath + '_' + args.h5table + '.h5'
+        # fp_out_path=os.path.join(args.outpath, outstem+'_'+args.h5table+'_footprint'+'.h5')
     out_path_final = outpath + '.h5'
-    oif.drop(columns=opsim.columns).to_hdf(
+
+    columns2drop = []
+    for column in opsim.columns:
+        if np.isin(column, oif.columns):
+            columns2drop.append(column)
+
+    oif.drop(columns=columns2drop).to_hdf(
             out_path_final,
             key='data', format='table', index=False, mode='w',
             complevel=3,)
@@ -107,6 +130,7 @@ def main():
     parser.add_argument('--outputstem', help='output file name', type=str, default='input')
     # parser.add_argument('--outputformat', help='output file format', type=str)
     parser.add_argument('--outpath', type=str, default='None')
+    parser.add_argument('--h5table', type=str, default=None, help='If input file is hdf5 with multiple tables, which table to read from')
 
     run(parser)
     # parser =
