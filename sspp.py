@@ -138,7 +138,12 @@ def main():
     parser.add_argument('--outpath', type=str, default='None')
     parser.add_argument('--h5table', type=str, default=None, help='If input file is hdf5 with multiple tables, which table to read from')
 
+    t0=time.time()
+    tracemalloc.start()
     run(parser)
+    _, peak = tracemalloc.get_traced_memory()
+    t1=time.time()
+    print(f"Peak memory use was %3.3f GB, runtime was %3.3f seconds" %(peak / 10**9, (t1-t0) ))
     # parser =
     # parser = argparse.ArgumentParser('--no-footprint', help='whether to run camera footprint', action=argparse.BooleanOptionalAction)
     # parser = argparse.ArgumentParser('--no-cutoff', help='disables limiting magnitude cutoff', action=argparse.BooleanOptionalAction)
