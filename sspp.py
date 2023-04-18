@@ -81,7 +81,8 @@ def run(parser):
     oif['dmagDetect']=PPTrailingLoss.PPTrailingLoss(oif, opsim)
     oif['dmagVignet']=PPVignetting.vignettingLosses(oif, opsim)
 
-    footprint = PPFootprintFilter.Footprint("detectors_corners.csv")
+    fp_path = os.path.join(os.path.dirname(__file__), "data/detectors_corners.csv")
+    footprint = PPFootprintFilter.Footprint(fp_path)
     onSensor, detectorIDs = footprint.applyFootprint(oif, opsim)
     oif=oif.iloc[onSensor]
     oif["detectorID"] = detectorIDs
