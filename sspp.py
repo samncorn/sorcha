@@ -57,11 +57,16 @@ def run(parser):
     opsimstart = oif['FieldID'].min()
     opsimend= oif['FieldID'].max()
 
-    querycolumns= ['observationId', 'observationStartMJD', 'filter', 'seeingFwhmGeom', 'seeingFwhmEff', 'fiveSigmaDepth', 'fieldRA', 'fieldDec', 'rotSkyPos']
-    query = 'SELECT ' + ', '.join(querycolumns) + f' FROM observations ORDER BY observationId LIMIT %i, %i' %(opsimstart, opsimend-opsimstart+1)
-    con=sql.connect(path2opsim)
-    opsim=pd.read_sql_query(query, con)
-   
+    opsimsuffix = path2opsim.split(',')
+    if opsimsuffix=='db':
+        querycolumns= ['observationId', 'observationStartMJD', 'filter', 'seeingFwhmGeom', 'seeingFwhmEff', 'fiveSigmaDepth', 'fieldRA', 'fieldDec', 'rotSkyPos']
+        query = 'SELECT ' + ', '.join(querycolumns) + f' FROM observations ORDER BY observationId LIMIT %i, %i' %(opsimstart, opsimend-opsimstart+1)
+        con=sql.connect(path2opsim)
+        opsim=pd.read_sql_query(query, con)
+    elif opsimsuffix=='csv':
+        opsim = pd.read_csv(path2opsim)
+    else:
+        sys.exit('unrecognized opsim file suffix. terminating...')
     colors=pd.read_csv(path2colors, delim_whitespace=True).reset_index(drop=True)
 
     # surveydb_join= pd.merge(oif["FieldID"], opsim, left_on="FieldID", right_on="observationId", how="left")
