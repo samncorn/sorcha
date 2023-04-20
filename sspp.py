@@ -54,19 +54,19 @@ def run(parser):
         # note that while we can load table from such an h5 file, they must be written to seperate output. 
         # adds a bit of time, but not complicated to have another post-post-processing script
 
-    opsimstart = oif['FieldID'].min()
-    opsimend= oif['FieldID'].max()
+    opsimstart = oif['FieldID'].min()-1
+    opsimend= oif['FieldID'].max()+1
 
     opsimsuffix = path2opsim.split('.')[-1]
+    querycolumns= ['observationId', 'observationStartMJD', 'filter', 'seeingFwhmGeom', 'seeingFwhmEff', 'fiveSigmaDepth', 'fieldRA', 'fieldDec', 'rotSkyPos']
     if opsimsuffix=='db':
-        querycolumns= ['observationId', 'observationStartMJD', 'filter', 'seeingFwhmGeom', 'seeingFwhmEff', 'fiveSigmaDepth', 'fieldRA', 'fieldDec', 'rotSkyPos']
         query = 'SELECT ' + ', '.join(querycolumns) + f' FROM observations ORDER BY observationId LIMIT %i, %i' %(opsimstart, opsimend-opsimstart+1)
         con=sql.connect(path2opsim)
         opsim=pd.read_sql_query(query, con)
     elif opsimsuffix=='csv':
         skiprows=lambda x: x > 0 and x < opsimstart and x > opsimend
         # nrows=opsimend-opsimstart
-        opsim = pd.read_csv(path2opsim, skiprows=skiprows, header=0)
+        opsim = pd.read_csv(path2opsim, columns=querycolumns, skiprows=skiprows, header=0)
     else:
         sys.exit('unrecognized opsim file suffix. terminating...')
     colors=pd.read_csv(path2colors, delim_whitespace=True).reset_index(drop=True)
