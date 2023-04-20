@@ -79,9 +79,10 @@ def addUncertainties(ephemsdf,obsdf,raName='fieldRA',decName='fieldDec',obsIdNam
     tephmin=ephemsdf[ephEpochName].min()
     tephmax=ephemsdf[ephEpochName].max()
 
-    eps = 1e-10
-    if(tephmin<tobsmin+eps or tephmax>tobsmax-eps):
+    if(tephmin<tobsmin):
         print('observations tmin, ephemeris tmin:',tobsmin, tephmin)
+        raise Exception('Observations do not cover the entire ephemeris timespan.')
+    if(tephmax>tobsmax):
         print('observations tmax, ephemeris tmax:',tobsmax, tephmax)
         raise Exception('Observations do not cover the entire ephemeris timespan.')
 
