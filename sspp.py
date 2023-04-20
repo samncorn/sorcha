@@ -57,7 +57,7 @@ def run(parser):
     opsimstart = oif['FieldID'].min()
     opsimend= oif['FieldID'].max()
 
-    opsimsuffix = path2opsim.split(',')
+    opsimsuffix = path2opsim.split('.')
     if opsimsuffix=='db':
         querycolumns= ['observationId', 'observationStartMJD', 'filter', 'seeingFwhmGeom', 'seeingFwhmEff', 'fiveSigmaDepth', 'fieldRA', 'fieldDec', 'rotSkyPos']
         query = 'SELECT ' + ', '.join(querycolumns) + f' FROM observations ORDER BY observationId LIMIT %i, %i' %(opsimstart, opsimend-opsimstart+1)
