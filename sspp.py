@@ -66,7 +66,7 @@ def run(parser):
     elif opsimsuffix=='csv':
         skiprows=opsimstart,
         nrows=opsimend-opsimstart
-        opsim = pd.read_csv(path2opsim, skiprows=skiprows, nrows=nrows)
+        opsim = pd.read_csv(path2opsim, skiprows=skiprows+1, nrows=nrows, header=0)
     else:
         sys.exit('unrecognized opsim file suffix. terminating...')
     colors=pd.read_csv(path2colors, delim_whitespace=True).reset_index(drop=True)
