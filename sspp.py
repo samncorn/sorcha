@@ -64,7 +64,9 @@ def run(parser):
         con=sql.connect(path2opsim)
         opsim=pd.read_sql_query(query, con)
     elif opsimsuffix=='csv':
-        opsim = pd.read_csv(path2opsim)
+        skiprows=opsimstart,
+        nrows=opsimend-opsimstart
+        opsim = pd.read_csv(path2opsim, skiprows=skiprows, nrows=nrows)
     else:
         sys.exit('unrecognized opsim file suffix. terminating...')
     colors=pd.read_csv(path2colors, delim_whitespace=True).reset_index(drop=True)
