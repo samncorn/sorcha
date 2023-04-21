@@ -116,7 +116,7 @@ def run(parser):
     oif["AstDecTrue(deg)"] = oif["AstDec(deg)"]
     oif["AstRA(deg)"], oif["AstDec(deg)"] = PPRandomizeMeasurements.randomizeAstrometry(oif, sigName='AstrometricSigma(deg)', rng=rng)
 
-    oif.drop( np.where(oif["Mag"] + oif["dmagDetect"] + oif['dmagVignet'] >= oif["fiveSigmaDepth"])[0], inplace=True)
+    oif.drop( np.where(oif["Mag"] + oif["dmagDetect"] + oif['dmagVignet'] + oif['dMagUncert'] >= oif["fiveSigmaDepth"])[0], inplace=True)
     oif.reset_index(drop=True, inplace=True)
 
     if args.h5table==None:
