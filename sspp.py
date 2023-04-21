@@ -96,6 +96,7 @@ def run(parser):
     oif.reset_index(drop=True, inplace=True)
 
     oif.drop(columns=["AstrometricSigma(mas)"], inplace=True)
+    oif['dMagUncert'] = PPRandomizeMeasurements.randomizePhotometry(oif, magName='Mag', sigName="PhotometricSigma(mag)", rng=rng)
 
     if args.save_footprint:
         if args.h5table==None:
