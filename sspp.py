@@ -96,7 +96,7 @@ def run(parser):
     oif.reset_index(drop=True, inplace=True)
 
     oif.drop(columns=["AstrometricSigma(mas)"], inplace=True)
-    oif['dMagUncert'] = PPRandomizeMeasurements.randomizePhotometry(oif, magName='Mag', sigName="PhotometricSigma(mag)", rng=rng)
+    oif['Mag_fading'] = PPRandomizeMeasurements.randomizePhotometry(oif, magName='Mag', sigName="PhotometricSigma(mag)", rng=rng)
 
     if args.save_footprint:
         if args.h5table==None:
@@ -116,7 +116,7 @@ def run(parser):
     oif["AstDecTrue(deg)"] = oif["AstDec(deg)"]
     oif["AstRA(deg)"], oif["AstDec(deg)"] = PPRandomizeMeasurements.randomizeAstrometry(oif, sigName='AstrometricSigma(deg)', rng=rng)
 
-    oif.drop( np.where(oif["Mag"] + oif["dmagDetect"] + oif['dmagVignet'] + oif['dMagUncert'] >= oif["fiveSigmaDepth"])[0], inplace=True)
+    oif.drop( np.where(oif["Mag_fading"] + oif["dmagDetect"] + oif['dmagVignet'] >= oif["fiveSigmaDepth"])[0], inplace=True)
     oif.reset_index(drop=True, inplace=True)
 
     if args.h5table==None:
