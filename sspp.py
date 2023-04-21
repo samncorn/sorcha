@@ -105,7 +105,8 @@ def run(parser):
         oif.drop(columns=opsim.columns).to_hdf(
             fp_out_path,
             key='data', 
-            complevel=3)
+            complevel=3,
+            format='table')
         
     oif.drop( np.where(oif["SNR"] <= 2.)[0], inplace=True)
     oif.reset_index(drop=True, inplace=True)
