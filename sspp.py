@@ -28,7 +28,7 @@ from modules import PPVignetting
 
 def run(parser):
     args=parser.parse_args()
-    path2opsim = args.opsim
+    path2cadence = args.cadence
     path2input = args.input
     path2colors = args.colors
 
@@ -45,7 +45,7 @@ def run(parser):
     rng = np.random.default_rng(2021) # should randomize this
 
     # pplogger.info('Reading pointing database')
-     # print(opsim.columns)
+     # print(cadence.columns)
     # oif = loadPandas(path2input)
     if args.h5table==None: # assumes pandas formatted hdf5 file
         oif = pd.read_hdf(args.input).reset_index(drop=True)
@@ -54,43 +54,43 @@ def run(parser):
         # note that while we can load table from such an h5 file, they must be written to seperate output. 
         # adds a bit of time, but not complicated to have another post-post-processing script
 
-    opsimstart = oif['FieldID'].min()-1
-    opsimend= oif['FieldID'].max()+1
+    cadencestart = oif['FieldID'].min()-1
+    cadenceend= oif['FieldID'].max()+1
 
-    opsimsuffix = path2opsim.split('.')[-1]
+    cadencesuffix = path2cadence.split('.')[-1]
     querycolumns= ['observationId', 'observationStartMJD', 'filter', 'seeingFwhmGeom', 'seeingFwhmEff', 'fiveSigmaDepth', 'fieldRA', 'fieldDec', 'rotSkyPos']
-    if opsimsuffix=='db':
-        query = 'SELECT ' + ', '.join(querycolumns) + f' FROM observations ORDER BY observationId LIMIT %i, %i' %(opsimstart, opsimend-opsimstart+1)
-        con=sql.connect(path2opsim)
-        opsim=pd.read_sql_query(query, con)
-    elif opsimsuffix=='csv':
-        skiprows=lambda x: x > 0 and x < opsimstart and x > opsimend
-        # nrows=opsimend-opsimstart
-        opsim = pd.read_csv(path2opsim, usecols=querycolumns, skiprows=skiprows, header=0)
+    if cadencesuffix=='db':
+        query = 'SELECT ' + ', '.join(querycolumns) + f' FROM observations ORDER BY observationId LIMIT %i, %i' %(cadencestart, cadenceend-cadencestart+1)
+        con=sql.connect(path2cadence)
+        cadence=pd.read_sql_query(query, con)
+    elif cadencesuffix=='csv':
+        skiprows=lambda x: x > 0 and x < cadencestart and x > cadenceend
+        # nrows=cadenceend-cadencestart
+        cadence = pd.read_csv(path2cadence, usecols=querycolumns, skiprows=skiprows, header=0)
     else:
-        sys.exit('unrecognized opsim file suffix. terminating...')
+        sys.exit('unrecognized cadence file suffix. terminating...')
     colors=pd.read_csv(path2colors, delim_whitespace=True).reset_index(drop=True)
 
-    # surveydb_join= pd.merge(oif["FieldID"], opsim, left_on="FieldID", right_on="observationId", how="left")
+    # surveydb_join= pd.merge(oif["FieldID"], cadence, left_on="FieldID", right_on="observationId", how="left")
     # for name in ["fiveSigmaDepth", 'filter', 'seeingFwhmEff', 'seeingFwhmGeom']:
     #     oif[name] = surveydb_join[name]
-    oif = pd.merge(oif, opsim, left_on="FieldID", right_on="observationId", how="left")
+    oif = pd.merge(oif, cadence, left_on="FieldID", right_on="observationId", how="left")
 
     # calculate 
-    oif["Mag"]=PPTranslateMagnitude.PPTranslateMagnitude(oif, opsim, colors)
+    oif["Mag"]=PPTranslateMagnitude.PPTranslateMagnitude(oif, cadence, colors)
 
     # print(oif.columns)
-    oif['AstrometricSigma(mas)'], oif['PhotometricSigma(mag)'], oif["SNR"] = PPAddUncertainties.addUncertainties(oif, opsim, obsIdNameEph='FieldID', obsIdName='observationId', filterMagName='Mag')
+    oif['AstrometricSigma(mas)'], oif['PhotometricSigma(mag)'], oif["SNR"] = PPAddUncertainties.addUncertainties(oif, cadence, obsIdNameEph='FieldID', obsIdName='observationId', filterMagName='Mag')
     # print(len(uncert[0]))
     # print(len(oif))
     oif["AstrometricSigma(deg)"] = oif['AstrometricSigma(mas)'] / 3600 / 1000
 
-    oif['dmagDetect']=PPTrailingLoss.PPTrailingLoss(oif, opsim)
-    oif['dmagVignet']=PPVignetting.vignettingLosses(oif, opsim)
+    oif['dmagDetect']=PPTrailingLoss.PPTrailingLoss(oif, cadence)
+    oif['dmagVignet']=PPVignetting.vignettingLosses(oif, cadence)
 
     fp_path = os.path.join(os.path.dirname(__file__), "data/detectors_corners.csv")
     footprint = PPFootprintFilter.Footprint(fp_path)
-    onSensor, detectorIDs = footprint.applyFootprint(oif, opsim)
+    onSensor, detectorIDs = footprint.applyFootprint(oif, cadence)
     oif=oif.iloc[onSensor]
     oif["detectorID"] = detectorIDs
     oif.reset_index(drop=True, inplace=True)
@@ -103,7 +103,7 @@ def run(parser):
             fp_out_path=os.path.join(args.outpath, outstem+'_footprint'+'.h5')
         else:
             fp_out_path=os.path.join(args.outpath, outstem+'_'+args.h5table+'_footprint'+'.h5')
-        oif.drop(columns=opsim.columns).to_hdf(
+        oif.drop(columns=cadence.columns).to_hdf(
             fp_out_path,
             key='data', 
             complevel=3,
@@ -127,7 +127,7 @@ def run(parser):
     out_path_final = outpath + '.h5'
 
     columns2drop = []
-    for column in opsim.columns:
+    for column in cadence.columns:
         if np.isin(column, oif.columns):
             columns2drop.append(column)
 
@@ -139,7 +139,7 @@ def run(parser):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', help='path to input file', type=str)
-    parser.add_argument('--opsim', help='path to survey database', type=str)
+    parser.add_argument('--cadence', help='path to survey database', type=str)
     parser.add_argument('--colors', help='path to color file', type=str)
     parser.add_argument('--save-footprint', dest='save_footprint', help='saves a copy after the footprint is run', action=argparse.BooleanOptionalAction)
     parser.add_argument('--outputstem', help='output file name', type=str, default='input')
