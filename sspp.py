@@ -62,9 +62,9 @@ def run(parser):
             # note that while we can load table from such an h5 file, they must be written to seperate output. 
             # adds a bit of time, but not complicated to have another post-post-processing script
     elif args.format=='csv':
-        oif = pd.read_csv( args.inout )
+        oif = pd.read_csv( args.input )
     else: # for now assume csv
-        oif = pd.read_csv( args.inout )
+        oif = pd.read_csv( args.input )
 
     cadencestart = oif['FieldID'].min()-1
     cadenceend= oif['FieldID'].max()+1
