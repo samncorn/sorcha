@@ -98,6 +98,7 @@ def run(parser):
 
     # drop observations not inside the camera outline
     oif = checkFootprint(oif, cadence, fov)
+    print( '{0} objects in the sensor footprint'.format( len( oif ) ) )
 
     # calculate apparent magnitude
     oif["Mag"]=PPTranslateMagnitude.PPTranslateMagnitude(oif, cadence, colors)
